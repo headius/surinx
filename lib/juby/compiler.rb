@@ -49,6 +49,11 @@ class Compiler
     @mb.invokestatic java.lang.Long, 'valueOf', [java.lang.Long, Java::long]
   end
 
+  def float(value)
+    @mb.ldc_double(value)
+    @mb.invokestatic java.lang.Double, 'valueOf', [java.lang.Double, Java::double]
+  end
+
   def puts
     @mb.aprintln
     @mb.aconst_null

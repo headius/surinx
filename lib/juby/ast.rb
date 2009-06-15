@@ -43,6 +43,12 @@ class org::jruby::ast::FixnumNode
   end
 end
 
+class org::jruby::ast::FloatNode
+  def compile(compiler)
+    compiler.float value
+  end
+end
+
 class org::jruby::ast::LocalAsgnNode
   def compile(compiler)
     compiler.compile(value_node)

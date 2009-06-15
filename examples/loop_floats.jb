@@ -1,0 +1,7 @@
+a = 0.0
+b = 0.0
+while a.compareTo(123_456.0) == -1.0
+  a += 1.0
+  b += a
+end
+puts b

@@ -104,12 +104,55 @@ public class SimpleJavaBootstrap {
         return a + b;
     }
 
+    public static final Double plus(Double a, Double b) {
+        return a + b;
+    }
+
+    public static final Double plus(Double a, Long b) {
+        return a + b;
+    }
+
+    public static final Double plus(Long a, Double b) {
+        return a + b;
+    }
+
     public static final Boolean equals(Long a, Long b) {
+        return a.equals(b);
+    }
+
+    public static final Boolean equals(Double a, Double b) {
+        return a.equals(b);
+    }
+
+    public static final Boolean equals(Double a, Long b) {
+        return ((Double)(double)b).equals(a);
+    }
+
+    public static final Boolean equals(Long a, Double b) {
+        return ((Double)(double)a).equals(b);
+    }
+
+    public static final Boolean equals(Integer a, Integer b) {
         return a.equals(b);
     }
 
     public static final Boolean equals(Integer a, Long b) {
         // have to upcast or it always returns false
         return ((Long)(long)a).equals(b);
+    }
+
+    public static final Boolean equals(Long a, Integer b) {
+        // have to upcast or it always returns false
+        return ((Long)(long)b).equals(a);
+    }
+
+    public static final Boolean equals(Integer a, Double b) {
+        // have to upcast or it always returns false
+        return ((Double)(double)a).equals(b);
+    }
+
+    public static final Boolean equals(Double a, Integer b) {
+        // have to upcast or it always returns false
+        return ((Double)(double)b).equals(a);
     }
 }
