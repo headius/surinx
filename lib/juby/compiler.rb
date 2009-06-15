@@ -16,6 +16,17 @@ class Compiler
     end
   end
 
+  def load(want_name)
+    cls = nil
+    @fb.generate do |name, cb|
+      if name.split('.class')[0] == want_name.split('.jb')[0]
+        cls = JRuby.runtime.jruby_class_loader.define_class(name.split('.class')[0], cb.generate.to_java_bytes)
+        break
+      end
+    end
+    cls
+  end
+
   def compile(node)
     node.compile(self)
   end

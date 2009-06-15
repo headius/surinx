@@ -18,9 +18,11 @@ end
 if ARGV[0] == '-e'
   src = ARGV[1]
   name = "dash_e"
+  index = 2
 elsif ARGV[0]
   src = File.read(ARGV[0])
   name = ARGV[0]
+  index = 1
 else
   raise "usage: jubyc -e \"script\" or jubyc <file.jb>"
 end
@@ -28,4 +30,13 @@ end
 node = JRuby.parse(src)
 c = Compiler.new(name)
 c.compile(node)
-c.write
+cls = c.load(name)
+
+begin
+  main = cls.get_method("main", [java.lang.String[]].to_java(java.lang.Class))
+  args = ARGV[index..-1] || []
+  main.invoke(nil, [args.to_java(:string)].to_java)
+rescue NativeException => x
+  x = x.cause while x.cause
+  x.print_stack_trace
+end
