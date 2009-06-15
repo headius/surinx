@@ -1,0 +1,7 @@
+a = 0
+b = 0
+while a.compareTo(20_000_000) == -1
+  a += 1
+  b += a
+end
+puts b
