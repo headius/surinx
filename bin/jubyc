@@ -1,5 +1,14 @@
-$: << File.join(File.dirname(__FILE__), '..', 'lib')
-require 'juby'
+begin
+  require 'juby'
+rescue LoadError
+  begin
+    require 'rubygems'
+    require 'juby'
+  rescue LoadError
+    $: << File.join(File.dirname(__FILE__), '..', 'lib')
+    require 'juby'
+  end
+end
 
 if ARGV[0] == '-e'
   src = ARGV[1]
