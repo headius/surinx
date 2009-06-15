@@ -5,7 +5,10 @@
         <data xmlns="http://www.netbeans.org/ns/ruby-project/1">
             <name>juby</name>
             <source-roots>
-                <root id="src.dir"/>
+                <root id="src.bin.dir"/>
+                <root id="src.dir" name="src"/>
+                <root id="src.lib.dir"/>
+                <root id="src.examples.dir"/>
             </source-roots>
             <test-roots/>
         </data>
