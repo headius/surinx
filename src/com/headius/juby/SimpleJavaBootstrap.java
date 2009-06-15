@@ -30,13 +30,24 @@ public class SimpleJavaBootstrap {
     public static final MethodHandle BOOTSTRAP = MethodHandles.lookup().findStatic(SimpleJavaBootstrap.class, "bootstrap", Linkage.BOOTSTRAP_METHOD_TYPE);
 
     public static Object fallback(CallSite site, Object receiver, Object[] args) throws Throwable {
-        // look for exact match for arg types
-        Class rClass = receiver.getClass();
-        Class[] argTypes = new Class[args.length];
-        for (int i = 0; i < argTypes.length; i++) {
-            argTypes[i] = args[i].getClass();
+        Method rMethod;
+        if (site.name().equals("+")) {
+            // primitive math
+            Class[] argTypes = new Class[args.length + 1];
+            argTypes[0] = receiver.getClass();
+            for (int i = 0; i < args.length; i++) {
+                argTypes[i + 1] = args[i].getClass();
+            }
+            rMethod = SimpleJavaBootstrap.class.getMethod("plus", argTypes);
+        } else {
+            // look for exact match for arg types
+            Class rClass = receiver.getClass();
+            Class[] argTypes = new Class[args.length];
+            for (int i = 0; i < argTypes.length; i++) {
+                argTypes[i] = args[i].getClass();
+            }
+            rMethod = rClass.getMethod(site.name(), argTypes);
         }
-        Method rMethod = rClass.getMethod(site.name(), argTypes);
 
         MethodHandle target = MethodHandles.lookup().unreflect(rMethod);
         target = MethodHandles.convertArguments(target, site.type());
@@ -80,4 +91,8 @@ public class SimpleJavaBootstrap {
     }
 
     public static final MethodHandle FALLBACK = MethodHandles.lookup().findStatic(SimpleJavaBootstrap.class, "fallback", MethodType.make(Object.class, CallSite.class, Object.class, Object[].class));
+
+    public static final Long plus(Long a, Long b) {
+        return a + b;
+    }
 }
