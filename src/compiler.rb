@@ -14,6 +14,12 @@ class org::jruby::ast::ArrayNode
   end
 end
 
+class org::jruby::ast::BlockNode
+  def compile(compiler)
+    child_nodes.each {|node| compiler.compile(node)}
+  end
+end
+
 class org::jruby::ast::CallNode
   def compile(compiler)
     compiler.compile(receiver_node)
@@ -41,6 +47,19 @@ class org::jruby::ast::FixnumNode
   end
 end
 
+class org::jruby::ast::LocalAsgnNode
+  def compile(compiler)
+    compiler.compile(value_node)
+    compiler.assign_local(name)
+  end
+end
+
+class org::jruby::ast::LocalVarNode
+  def compile(compiler)
+    compiler.retrieve_local(name)
+  end
+end
+
 class org::jruby::ast::NewlineNode
   def compile(compiler)
     compiler.line(next_node)
@@ -50,6 +69,12 @@ end
 class org::jruby::ast::RootNode
   def compile(compiler)
     compiler.root(self)
+  end
+end
+
+class org::jruby::ast::WhileNode
+  def compile(compiler)
+    compiler.loop(condition_node, body_node)
   end
 end
 
@@ -73,10 +98,11 @@ class Compiler
   def line(node)
     @mb.line node.position.start_line
     compile(node)
+    @mb.pop
   end
 
   def root(node)
-    @cb = @fb.public_class(@filename.split('.rb')[0])
+    @cb = @fb.public_class(@filename.split('.jb')[0])
     class << @cb
       attr_accessor :bootstrapped
       alias :bootstrapped? :bootstrapped
@@ -100,6 +126,7 @@ class Compiler
 
   def puts
     @mb.aprintln
+    @mb.aconst_null
   end
 
   def call(name, size)
@@ -114,6 +141,28 @@ class Compiler
     else
       @mb.aload 0
     end
+  end
+
+  def assign_local(name)
+    @mb.dup
+    @mb.astore(@mb.local name)
+  end
+
+  def retrieve_local(name)
+    @mb.aload(@mb.local name);
+  end
+
+  def loop(condition, body)
+    top = @mb.label
+    bottom = @mb.label
+    top.set!
+    compile(condition)
+    @mb.getstatic java.lang.Boolean, "FALSE", java.lang.Boolean
+    @mb.if_acmpeq bottom
+    compile(body)
+    @mb.goto top
+    bottom.set!
+    @mb.aconst_null
   end
 
   def bootstrap
@@ -132,8 +181,8 @@ if $0 == __FILE__
     src = ARGV[1]
     name = "dash_e"
   else
-    src = File.read(ARGV[1])
-    name = ARGV[1]
+    src = File.read(ARGV[0])
+    name = ARGV[0]
   end
 
   node = JRuby.parse(src)

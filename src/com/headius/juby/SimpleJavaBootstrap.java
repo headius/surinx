@@ -39,6 +39,14 @@ public class SimpleJavaBootstrap {
                 argTypes[i + 1] = args[i].getClass();
             }
             rMethod = SimpleJavaBootstrap.class.getMethod("plus", argTypes);
+        } else if (site.name().equals("==")) {
+            // booleans return non-null on truth
+            Class[] argTypes = new Class[args.length + 1];
+            argTypes[0] = receiver.getClass();
+            for (int i = 0; i < args.length; i++) {
+                argTypes[i + 1] = args[i].getClass();
+            }
+            rMethod = SimpleJavaBootstrap.class.getMethod("equals", argTypes);
         } else {
             // look for exact match for arg types
             Class rClass = receiver.getClass();
@@ -94,5 +102,14 @@ public class SimpleJavaBootstrap {
 
     public static final Long plus(Long a, Long b) {
         return a + b;
+    }
+
+    public static final Boolean equals(Long a, Long b) {
+        return a.equals(b);
+    }
+
+    public static final Boolean equals(Integer a, Long b) {
+        // have to upcast or it always returns false
+        return ((Long)(long)a).equals(b);
     }
 }
