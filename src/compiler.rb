@@ -43,7 +43,7 @@ end
 
 class org::jruby::ast::NewlineNode
   def compile(compiler)
-    compiler.compile(next_node)
+    compiler.line(next_node)
   end
 end
 
@@ -70,8 +70,18 @@ class Compiler
     node.compile(self)
   end
 
+  def line(node)
+    @mb.line node.position.start_line
+    compile(node)
+  end
+
   def root(node)
     @cb = @fb.public_class(@filename.split('.rb')[0])
+    class << @cb
+      attr_accessor :bootstrapped
+      alias :bootstrapped? :bootstrapped
+    end
+
     @mb = @cb.public_static_method 'main', Java::void, java.lang.String[]
     @mb.start
     node.child_nodes.each {|n| compile(n)}
@@ -93,6 +103,8 @@ class Compiler
   end
 
   def call(name, size)
+    # install bootstrap if this is the first dynamic call
+    bootstrap unless @cb.bootstrapped?
     @mb.invokedynamic java.lang.Object, name, [java.lang.Object, *([java.lang.Object] * size)]
   end
 
@@ -102,6 +114,16 @@ class Compiler
     else
       @mb.aload 0
     end
+  end
+
+  def bootstrap
+    @cb.static_init do
+      ldc this.name
+      invokestatic java.lang.Class, "forName", [java.lang.Class, string]
+      invokestatic com.headius.juby.SimpleJavaBootstrap, "registerBootstrap", [void, java.lang.Class]
+      returnvoid
+    end
+    @cb.bootstrapped = true
   end
 end
 
