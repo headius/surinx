@@ -27,6 +27,29 @@ class Compiler
     cls
   end
 
+  def body(nodes)
+    compile(nodes[0])
+    a = 1
+    while a < nodes.length
+      @mb.pop
+      compile(nodes[a])
+      a += 1
+    end
+  end
+
+  def defn(name, args, body)
+    arg_count = args.length
+
+    old_mb, @mb = @mb, @cb.public_static_method(name, java.lang.Object, *([java.lang.Object] * arg_count))
+    @mb.start
+    args.each {|arg| @mb.local arg.name}
+    compile(body)
+    @mb.areturn
+    @mb.stop
+    @mb = old_mb
+    @mb.aconst_null
+  end
+
   def compile(node)
     node.compile(self)
   end
@@ -34,7 +57,6 @@ class Compiler
   def line(node)
     @mb.line node.position.start_line
     compile(node)
-    @mb.pop
   end
 
   def root(node)
@@ -46,7 +68,8 @@ class Compiler
 
     @mb = @cb.public_static_method 'main', Java::void, java.lang.String[]
     @mb.start
-    node.child_nodes.each {|n| compile(n)}
+    body(node.child_nodes)
+    @mb.pop
     @mb.returnvoid
     @mb.stop
   end
@@ -77,7 +100,7 @@ class Compiler
   end
 
   def this
-    if @mb.static?
+    if @mb.static
       @mb.aconst_null
     else
       @mb.aload 0
@@ -101,6 +124,7 @@ class Compiler
     @mb.getstatic java.lang.Boolean, "FALSE", java.lang.Boolean
     @mb.if_acmpeq bottom
     compile(body)
+    @mb.pop
     @mb.goto top
     bottom.set!
     @mb.aconst_null

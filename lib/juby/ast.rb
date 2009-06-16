@@ -12,7 +12,7 @@ end
 
 class org::jruby::ast::BlockNode
   def compile(compiler)
-    child_nodes.each {|node| compiler.compile(node)}
+    compiler.body(child_nodes)
   end
 end
 
@@ -32,8 +32,14 @@ class org::jruby::ast::FCallNode
     else
       compiler.this
       compiler.compile(args_node)
-      compiler.call name, args_node.size
+      compiler.call name, args_node.size + 1
     end
+  end
+end
+
+class org::jruby::ast::DefnNode
+  def compile(compiler)
+    compiler.defn name, args_node.pre.child_nodes, body_node
   end
 end
 

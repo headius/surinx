@@ -31,6 +31,7 @@ public class SimpleJavaBootstrap {
 
     public static Object fallback(CallSite site, Object receiver, Object[] args) throws Throwable {
         Method rMethod;
+        MethodHandle target = null;
         if (site.name().equals("+")) {
             // primitive math
             Class[] argTypes = new Class[args.length + 1];
@@ -39,6 +40,8 @@ public class SimpleJavaBootstrap {
                 argTypes[i + 1] = args[i].getClass();
             }
             rMethod = SimpleJavaBootstrap.class.getMethod("plus", argTypes);
+            target = MethodHandles.lookup().unreflect(rMethod);
+            target = MethodHandles.convertArguments(target, site.type());
         } else if (site.name().equals("==")) {
             // booleans return non-null on truth
             Class[] argTypes = new Class[args.length + 1];
@@ -47,18 +50,40 @@ public class SimpleJavaBootstrap {
                 argTypes[i + 1] = args[i].getClass();
             }
             rMethod = SimpleJavaBootstrap.class.getMethod("equals", argTypes);
+            target = MethodHandles.lookup().unreflect(rMethod);
+            target = MethodHandles.convertArguments(target, site.type());
         } else {
             // look for exact match for arg types
-            Class rClass = receiver.getClass();
             Class[] argTypes = new Class[args.length];
             for (int i = 0; i < argTypes.length; i++) {
                 argTypes[i] = args[i].getClass();
             }
-            rMethod = rClass.getMethod(site.name(), argTypes);
+            
+            Class rClass = null;
+            if (receiver == null) {
+                rClass = site.callerClass();
+                try {
+                    rMethod = rClass.getMethod(site.name(), argTypes);
+                    target = MethodHandles.lookup().findStatic(rClass, site.name(), site.type());
+                    target = MethodHandles.convertArguments(target, site.type());
+                } catch (NoSuchMethodException nsme) {
+                    // hacky...try with all Object
+                    for (int i = 0; i < argTypes.length; i++) {
+                        argTypes[i] = Object.class;
+                    }
+                    rMethod = rClass.getMethod(site.name(), argTypes);
+                    target = MethodHandles.lookup().unreflect(rMethod);
+                    target = MethodHandles.dropArguments(target, 0, Object.class);
+                    target = MethodHandles.convertArguments(target, site.type());
+                }
+            } else {
+                rClass = receiver.getClass();
+                rMethod = rClass.getMethod(site.name(), argTypes);
+                target = MethodHandles.lookup().unreflect(rMethod);
+                target = MethodHandles.convertArguments(target, site.type());
+            }
         }
 
-        MethodHandle target = MethodHandles.lookup().unreflect(rMethod);
-        target = MethodHandles.convertArguments(target, site.type());
         Object result = null;
         switch (args.length) {
         case 0:
