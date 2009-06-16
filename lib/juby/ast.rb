@@ -55,6 +55,12 @@ class org::jruby::ast::FloatNode
   end
 end
 
+class org::jruby::ast::IfNode
+  def compile(compiler)
+    compiler.branch condition, then_body, else_body
+  end
+end
+
 class org::jruby::ast::LocalAsgnNode
   def compile(compiler)
     compiler.compile(value_node)

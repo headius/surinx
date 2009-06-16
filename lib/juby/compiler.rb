@@ -93,10 +93,30 @@ class Compiler
     @mb.aconst_null
   end
 
+  NAME_TRANSLATED = Hash.new {|hash, key| key}
+  NAME_TRANSLATED["<"] = "__lt__"
+  NAME_TRANSLATED[">"] = "__gt__"
+  NAME_TRANSLATED["<="] = "__le__"
+  NAME_TRANSLATED[">="] = "__ge__"
+
   def call(name, size)
     # install bootstrap if this is the first dynamic call
     bootstrap unless @cb.bootstrapped?
+    name = NAME_TRANSLATED[name]
     @mb.invokedynamic java.lang.Object, name, [java.lang.Object, *([java.lang.Object] * size)]
+  end
+
+  def branch(condition, then_body, else_body)
+    els = @mb.label
+    done = @mb.label
+    compile(condition)
+    @mb.getstatic java.lang.Boolean, "FALSE", java.lang.Boolean
+    @mb.if_acmpeq els
+    compile(then_body)
+    @mb.goto done
+    els.set!
+    compile(else_body)
+    done.set!
   end
 
   def this

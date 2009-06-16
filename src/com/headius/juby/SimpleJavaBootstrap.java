@@ -42,6 +42,16 @@ public class SimpleJavaBootstrap {
             rMethod = SimpleJavaBootstrap.class.getMethod("plus", argTypes);
             target = MethodHandles.lookup().unreflect(rMethod);
             target = MethodHandles.convertArguments(target, site.type());
+        } else if (site.name().equals("-")) {
+            // primitive math
+            Class[] argTypes = new Class[args.length + 1];
+            argTypes[0] = receiver.getClass();
+            for (int i = 0; i < args.length; i++) {
+                argTypes[i + 1] = args[i].getClass();
+            }
+            rMethod = SimpleJavaBootstrap.class.getMethod("minus", argTypes);
+            target = MethodHandles.lookup().unreflect(rMethod);
+            target = MethodHandles.convertArguments(target, site.type());
         } else if (site.name().equals("==")) {
             // booleans return non-null on truth
             Class[] argTypes = new Class[args.length + 1];
@@ -50,6 +60,46 @@ public class SimpleJavaBootstrap {
                 argTypes[i + 1] = args[i].getClass();
             }
             rMethod = SimpleJavaBootstrap.class.getMethod("equals", argTypes);
+            target = MethodHandles.lookup().unreflect(rMethod);
+            target = MethodHandles.convertArguments(target, site.type());
+        } else if (site.name().equals("__lt__")) {
+            // booleans return non-null on truth
+            Class[] argTypes = new Class[args.length + 1];
+            argTypes[0] = receiver.getClass();
+            for (int i = 0; i < args.length; i++) {
+                argTypes[i + 1] = args[i].getClass();
+            }
+            rMethod = SimpleJavaBootstrap.class.getMethod(site.name(), argTypes);
+            target = MethodHandles.lookup().unreflect(rMethod);
+            target = MethodHandles.convertArguments(target, site.type());
+        } else if (site.name().equals("__gt__")) {
+            // booleans return non-null on truth
+            Class[] argTypes = new Class[args.length + 1];
+            argTypes[0] = receiver.getClass();
+            for (int i = 0; i < args.length; i++) {
+                argTypes[i + 1] = args[i].getClass();
+            }
+            rMethod = SimpleJavaBootstrap.class.getMethod(site.name(), argTypes);
+            target = MethodHandles.lookup().unreflect(rMethod);
+            target = MethodHandles.convertArguments(target, site.type());
+        } else if (site.name().equals("__le__")) {
+            // booleans return non-null on truth
+            Class[] argTypes = new Class[args.length + 1];
+            argTypes[0] = receiver.getClass();
+            for (int i = 0; i < args.length; i++) {
+                argTypes[i + 1] = args[i].getClass();
+            }
+            rMethod = SimpleJavaBootstrap.class.getMethod(site.name(), argTypes);
+            target = MethodHandles.lookup().unreflect(rMethod);
+            target = MethodHandles.convertArguments(target, site.type());
+        } else if (site.name().equals("__ge__")) {
+            // booleans return non-null on truth
+            Class[] argTypes = new Class[args.length + 1];
+            argTypes[0] = receiver.getClass();
+            for (int i = 0; i < args.length; i++) {
+                argTypes[i + 1] = args[i].getClass();
+            }
+            rMethod = SimpleJavaBootstrap.class.getMethod(site.name(), argTypes);
             target = MethodHandles.lookup().unreflect(rMethod);
             target = MethodHandles.convertArguments(target, site.type());
         } else {
@@ -125,6 +175,22 @@ public class SimpleJavaBootstrap {
 
     public static final MethodHandle FALLBACK = MethodHandles.lookup().findStatic(SimpleJavaBootstrap.class, "fallback", MethodType.make(Object.class, CallSite.class, Object.class, Object[].class));
 
+    public static final Boolean __lt__(Long a, Long b) {
+        return a < b;
+    }
+
+    public static final Boolean __gt__(Long a, Long b) {
+        return a > b;
+    }
+
+    public static final Boolean __le__(Long a, Long b) {
+        return a <= b;
+    }
+
+    public static final Boolean __ge__(Long a, Long b) {
+        return a >= b;
+    }
+
     public static final Long plus(Long a, Long b) {
         return a + b;
     }
@@ -139,6 +205,22 @@ public class SimpleJavaBootstrap {
 
     public static final Double plus(Long a, Double b) {
         return a + b;
+    }
+
+    public static final Long minus(Long a, Long b) {
+        return a - b;
+    }
+
+    public static final Double minus(Double a, Double b) {
+        return a - b;
+    }
+
+    public static final Double minus(Double a, Long b) {
+        return a - b;
+    }
+
+    public static final Double minus(Long a, Double b) {
+        return a - b;
     }
 
     public static final Boolean equals(Long a, Long b) {
