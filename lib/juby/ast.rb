@@ -1,5 +1,34 @@
 require 'java'
 
+class Operand
+
+end
+
+class Constant < Operand
+  def initialize(type, value)
+    @type, @value = type, value
+  end
+end
+
+class Instruction < Operand
+
+end
+
+class LookupName < Instruction
+  def initialize(name)
+    @name = name
+  end
+end
+
+class LookupMethod < Instruction
+  def initialize(name, recv_type, arg_count)
+    @name, @recv_type, @arg_count = name, recv_type, arg_count
+  end
+end
+
+class ApplyMethod < Instruction
+end
+
 class org::jruby::ast::ArrayNode
   def compile(compiler)
     if lightweight?
@@ -11,12 +40,23 @@ class org::jruby::ast::ArrayNode
 end
 
 class org::jruby::ast::BlockNode
+  def build(body)
+    child_nodes.each{|n| n.build(body)}
+  end
   def compile(compiler)
     compiler.body(child_nodes)
   end
 end
 
 class org::jruby::ast::CallNode
+  def build(body)
+    size = args ? args.child_nodes.size : 0
+    body.add(LookupMethod.new(name, JObject, size))
+    receiver_node.build(body)
+    args_node.each{|n| n.build(body)} if size > 0
+    body.add(ApplyMethod.new)
+  end
+
   def compile(compiler)
     compiler.compile(receiver_node)
     compiler.compile(args_node)
@@ -25,6 +65,14 @@ class org::jruby::ast::CallNode
 end
 
 class org::jruby::ast::FCallNode
+  def build(body)
+    size = args ? args.child_nodes.size : 0
+    body.add(LookupMethod.new(name, JObject, size))
+    receiver_node.build(body)
+    args_node.each{|n| n.build(body)} if size > 0
+    body.add(ApplyMethod.new)
+  end
+
   def compile(compiler)
     if name == "puts"
       compiler.compile(args_node)
