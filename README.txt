@@ -18,8 +18,8 @@ The latter will produce a "dash_e.class"
 
 ==Running the compiled result==
 
-java -Xint -XX:+EnableInvokeDynamic -cp src:. <classname>
+java -XX:+EnableInvokeDynamic -cp src:. <classname>
 
 ==Notes==
 
--Xint is only necessary until MLVM/DVM has JIT support for invokedynamic
+
