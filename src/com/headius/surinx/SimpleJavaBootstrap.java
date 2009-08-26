@@ -3,7 +3,7 @@
  * and open the template in the editor.
  */
 
-package com.headius.juby;
+package com.headius.surinx;
 
 import java.dyn.CallSite;
 import java.dyn.Linkage;

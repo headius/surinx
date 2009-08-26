@@ -1,4 +1,4 @@
-require 'juby/ast'
+require 'surinx/ast'
 require 'bitescript'
 require 'jruby'
 
@@ -154,7 +154,7 @@ class Compiler
     @cb.static_init do
       ldc this.name
       invokestatic java.lang.Class, "forName", [java.lang.Class, string]
-      invokestatic com.headius.juby.SimpleJavaBootstrap, "registerBootstrap", [void, java.lang.Class]
+      invokestatic com.headius.surinx.SimpleJavaBootstrap, "registerBootstrap", [void, java.lang.Class]
       returnvoid
     end
     @cb.bootstrapped = true

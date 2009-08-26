@@ -4,14 +4,14 @@ require 'java'
 $CLASSPATH << File.join(File.dirname(__FILE__), '..', 'src')
 
 begin
-  require 'juby'
+  require 'surinx'
 rescue LoadError
   begin
     require 'rubygems'
-    require 'juby'
+    require 'surinx'
   rescue LoadError
     $: << File.join(File.dirname(__FILE__), '..', 'lib')
-    require 'juby'
+    require 'surinx'
   end
 end
 
@@ -22,7 +22,7 @@ elsif ARGV[0]
   src = File.read(ARGV[0])
   name = ARGV[0]
 else
-  raise "usage: jubyc -e \"script\" or jubyc <file.jb>"
+  raise "usage: surinxc -e \"script\" or surinxc <file.sx>"
 end
 
 node = JRuby.parse(src)
