@@ -263,4 +263,8 @@ public class SimpleJavaBootstrap {
         // have to upcast or it always returns false
         return ((Double)(double)b).equals(a);
     }
+
+    public static final Boolean equals(Boolean a, Boolean b) {
+        return a == b;
+    }
 }

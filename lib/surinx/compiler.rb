@@ -19,7 +19,7 @@ class Compiler
   def load(want_name)
     cls = nil
     @fb.generate do |name, cb|
-      if name.split('.class')[0] == want_name.split('.jb')[0]
+      if name.split('.class')[0] == want_name.split('.sx')[0]
         cls = JRuby.runtime.jruby_class_loader.define_class(name.split('.class')[0], cb.generate.to_java_bytes)
         break
       end
@@ -60,7 +60,7 @@ class Compiler
   end
 
   def root(node)
-    @cb = @fb.public_class(@filename.split('.jb')[0])
+    @cb = @fb.public_class(@filename.split('.sx')[0])
     class << @cb
       attr_accessor :bootstrapped
       alias :bootstrapped? :bootstrapped
@@ -158,5 +158,13 @@ class Compiler
       returnvoid
     end
     @cb.bootstrapped = true
+  end
+
+  def true
+    @mb.getstatic java.lang.Boolean, "TRUE", java.lang.Boolean
+  end
+
+  def false
+    @mb.getstatic java.lang.Boolean, "FALSE", java.lang.Boolean
   end
 end

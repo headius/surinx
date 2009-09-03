@@ -91,6 +91,12 @@ class org::jruby::ast::DefnNode
   end
 end
 
+class org::jruby::ast::FalseNode
+  def compile(compiler)
+    compiler.false
+  end
+end
+
 class org::jruby::ast::FixnumNode
   def compile(compiler)
     compiler.fixnum value
@@ -131,6 +137,12 @@ end
 class org::jruby::ast::RootNode
   def compile(compiler)
     compiler.root(self)
+  end
+end
+
+class org::jruby::ast::TrueNode
+  def compile(compiler)
+    compiler.true
   end
 end
 

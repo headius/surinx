@@ -1,0 +1,2 @@
+puts true == true
+puts false == false
