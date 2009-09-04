@@ -1,0 +1,4 @@
+import 'java.lang.System'
+
+System.setProperty 'foo', 'bar'
+puts System.getProperty('foo') == 'bar'

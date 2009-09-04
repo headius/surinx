@@ -131,7 +131,17 @@ class Compiler
   end
   
   def get_constant(name)
-    compile(instance_variable_get "@#{name}")
+    value = instance_variable_get "@#{name}"
+    if Module === value
+      @mb.ldc(value)
+    else
+      compile(value)
+    end
+  end
+  
+  def import(name)
+    short_name = name.split(/\./)[-1]
+    instance_variable_set "@#{short_name}", eval(name)
   end
 
   def branch(condition, then_body, else_body, expr)

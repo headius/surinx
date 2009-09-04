@@ -10,6 +10,8 @@ import java.dyn.Linkage;
 import java.dyn.MethodHandle;
 import java.dyn.MethodHandles;
 import java.dyn.MethodType;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
@@ -135,23 +137,53 @@ public class SimpleJavaBootstrap {
             }
             
             Class rClass = null;
-            if (receiver == null) {
-                rClass = site.callerClass();
-                try {
-                    rMethod = rClass.getMethod(site.name(), argTypes);
-                    target = MethodHandles.lookup().unreflect(rMethod);
-                    target = MethodHandles.dropArguments(target, 0, Object.class);
-                    target = MethodHandles.convertArguments(target, site.type());
-                } catch (NoSuchMethodException nsme) {
-                    // hacky...try with all Object
-                    for (int i = 0; i < argTypes.length; i++) {
-                        argTypes[i] = Object.class;
-                    }
-                    rMethod = rClass.getMethod(site.name(), argTypes);
-                    target = MethodHandles.lookup().unreflect(rMethod);
-                    target = MethodHandles.dropArguments(target, 0, Object.class);
-                    target = MethodHandles.convertArguments(target, site.type());
+            if (receiver == null || receiver.getClass() == Class.class) {
+				if (receiver == null) {
+                	rClass = site.callerClass();
+                } else {
+	      			rClass = (Class)receiver;
                 }
+
+				if (site.name().equals("new")) {
+					// constructor calls not working in MLVM right now
+	                // try {
+	                //     Constructor rConstructor = rClass.getConstructor(argTypes);
+	                //     target = MethodHandles.lookup().unreflectConstructor(rConstructor);
+	                // } catch (NoSuchMethodException nsme) {
+	                //     // hacky...try with all Object
+	                //     for (int i = 0; i < argTypes.length; i++) {
+	                //         argTypes[i] = Object.class;
+	                //     }
+	                //     Constructor rConstructor = rClass.getConstructor(argTypes);
+	                //     target = MethodHandles.lookup().unreflectConstructor(rConstructor);
+	                // }
+					
+		            argTypes = new Class[args.length + 1];
+		            argTypes[0] = Class.class;
+		            for (int i = 0; i < args.length; i++) {
+		                argTypes[i + 1] = Object.class;
+		            }
+		            rMethod = SimpleJavaBootstrap.class.getMethod("__new__", argTypes);
+		            target = MethodHandles.lookup().unreflect(rMethod);
+		            target = MethodHandles.convertArguments(target, site.type());
+		
+					site.setTarget(target);
+					return __new__(rClass, args);
+				} else {
+	                try {
+	                    rMethod = rClass.getMethod(site.name(), argTypes);
+	                    target = MethodHandles.lookup().unreflect(rMethod);
+	                } catch (NoSuchMethodException nsme) {
+	                    // hacky...try with all Object
+	                    for (int i = 0; i < argTypes.length; i++) {
+	                        argTypes[i] = Object.class;
+	                    }
+	                    rMethod = rClass.getMethod(site.name(), argTypes);
+	                    target = MethodHandles.lookup().unreflect(rMethod);
+	                }	
+	                target = MethodHandles.dropArguments(target, 0, Object.class);
+                    target = MethodHandles.convertArguments(target, site.type());
+				}
             } else {
                 rClass = receiver.getClass();
                 rMethod = rClass.getMethod(site.name(), argTypes);
@@ -305,4 +337,80 @@ public class SimpleJavaBootstrap {
     public static final Boolean equals(Boolean a, Boolean b) {
         return a == b;
     }
+
+	public static final Object __new__(Class target) {
+		try {
+			return target.newInstance();
+		} catch (InstantiationException ie) {
+			throw new RuntimeException(ie);
+		} catch (IllegalAccessException iae) {
+			throw new RuntimeException(iae);
+		}
+	}
+
+	public static final Object __new__(Class target, Object arg0) {
+		Constructor c;
+		try {
+			c = target.getConstructor(arg0.getClass());
+			return c.newInstance(arg0);
+		} catch (NoSuchMethodException nsme) {
+			throw new RuntimeException(nsme);
+		} catch (InstantiationException ie) {
+			throw new RuntimeException(ie);
+		} catch (IllegalAccessException iae) {
+			throw new RuntimeException(iae);
+		} catch (InvocationTargetException ite) {
+			throw new RuntimeException(ite);
+		}
+	}
+
+	public static final Object __new__(Class target, Object arg0, Object arg1) {
+		Constructor c;
+		try {
+			c = target.getConstructor(arg0.getClass(), arg1.getClass());
+			return c.newInstance(arg0, arg1);
+		} catch (NoSuchMethodException nsme) {
+			throw new RuntimeException(nsme);
+		} catch (InstantiationException ie) {
+			throw new RuntimeException(ie);
+		} catch (IllegalAccessException iae) {
+			throw new RuntimeException(iae);
+		} catch (InvocationTargetException ite) {
+			throw new RuntimeException(ite);
+		}
+	}
+
+	public static final Object __new__(Class target, Object arg0, Object arg1, Object arg2) {
+		Constructor c;
+		try {
+			c = target.getConstructor(arg0.getClass(), arg1.getClass(), arg2.getClass());
+			return c.newInstance(arg0, arg1, arg2);
+		} catch (NoSuchMethodException nsme) {
+			throw new RuntimeException(nsme);
+		} catch (InstantiationException ie) {
+			throw new RuntimeException(ie);
+		} catch (IllegalAccessException iae) {
+			throw new RuntimeException(iae);
+		} catch (InvocationTargetException ite) {
+			throw new RuntimeException(ite);
+		}
+	}
+
+	public static final Object __new__(Class target, Object[] args) {
+		Class[] argTypes = new Class[args.length];
+		for (int i = 0; i < args.length; i++) argTypes[i] = args[i].getClass();
+		Constructor c;
+		try {
+			c = target.getConstructor(argTypes);
+			return c.newInstance(args);
+		} catch (NoSuchMethodException nsme) {
+			throw new RuntimeException(nsme);
+		} catch (InstantiationException ie) {
+			throw new RuntimeException(ie);
+		} catch (IllegalAccessException iae) {
+			throw new RuntimeException(iae);
+		} catch (InvocationTargetException ite) {
+			throw new RuntimeException(ite);
+		}
+	}
 }

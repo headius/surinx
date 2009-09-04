@@ -59,8 +59,13 @@ class org::jruby::ast::CallNode
 
   def compile(compiler, expr)
     compiler.compile(receiver_node)
-    compiler.compile(args_node)
-    compiler.call name, args_node.size + 1, expr
+    
+    if args_node
+      compiler.compile(args_node)
+      compiler.call name, args_node.size + 1, expr
+    else
+      compiler.call name, 1, expr
+    end
   end
 end
 
@@ -93,6 +98,9 @@ class org::jruby::ast::FCallNode
     elsif name == "print"
       compiler.compile(args_node)
       compiler.print expr
+    elsif name == "import"
+      compiler.import args_node.get(0).value
+      compiler.this if expr
     else
       compiler.this
       compiler.compile(args_node)
