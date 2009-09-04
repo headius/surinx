@@ -27,12 +27,20 @@ class Compiler
     cls
   end
 
-  def body(nodes)
-    compile(nodes[0])
+  def body(nodes, expr)
+    if nodes.length == 1
+      compile(nodes[0], expr)
+    else
+      compile(nodes[0], false)
+    end
     a = 1
     while a < nodes.length
-      @mb.pop
-      compile(nodes[a])
+      if a == nodes.length - 1
+        # last node
+        compile(nodes[a], expr)
+      else
+        compile(nodes[a], false)
+      end
       a += 1
     end
   end
@@ -44,23 +52,22 @@ class Compiler
     old_mb, @mb = @mb, @cb.public_static_method(name, java.lang.Object, *([java.lang.Object] * arg_count))
     @mb.start
     args.each {|arg| @mb.local arg.name}
-    compile(body)
+    compile(body, true)
     @mb.areturn
     @mb.stop
     @mb = old_mb
-    @mb.aconst_null
   end
 
-  def compile(node)
-    node.compile(self)
+  def compile(node, expr = true)
+    node.compile(self, expr)
   end
 
-  def line(node)
+  def line(node, expr)
     @mb.line node.position.start_line
-    compile(node)
+    compile(node, expr)
   end
 
-  def root(node)
+  def root(node, expr)
     @cb = @fb.public_class(@filename.split('.sx')[0])
     class << @cb
       attr_accessor :bootstrapped
@@ -69,8 +76,8 @@ class Compiler
 
     @mb = @cb.public_static_method 'main', Java::void, java.lang.String[]
     @mb.start
-    body(node.child_nodes)
-    @mb.pop
+    body(node.child_nodes, expr)
+    @mb.pop if expr
     @mb.returnvoid
     @mb.stop
   end
@@ -93,16 +100,16 @@ class Compiler
     @mb.ldc(value)
   end
 
-  def puts
+  def puts expr
     @mb.aprintln
-    @mb.aconst_null
+    @mb.aconst_null if expr
   end
   
-  def print
+  def print expr
     @mb.getstatic java.lang.System, "out", java.io.PrintStream
     @mb.swap
     @mb.invokevirtual java.io.PrintStream, "print", [Java::void, java.lang.Object]
-    @mb.aconst_null
+    @mb.aconst_null if expr
   end
 
   NAME_TRANSLATED = Hash.new {|hash, key| key}
@@ -111,11 +118,12 @@ class Compiler
   NAME_TRANSLATED["<="] = "__le__"
   NAME_TRANSLATED[">="] = "__ge__"
 
-  def call(name, size)
+  def call(name, size, expr)
     # install bootstrap if this is the first dynamic call
     bootstrap unless @cb.bootstrapped?
     name = NAME_TRANSLATED[name]
     @mb.invokedynamic java.lang.Object, name, [java.lang.Object, *([java.lang.Object] * size)]
+    @mb.pop unless expr
   end
   
   def set_constant(name, body)
@@ -126,23 +134,23 @@ class Compiler
     compile(instance_variable_get "@#{name}")
   end
 
-  def branch(condition, then_body, else_body)
+  def branch(condition, then_body, else_body, expr)
     els = @mb.label
     done = @mb.label
     compile(condition)
     @mb.getstatic java.lang.Boolean, "FALSE", java.lang.Boolean
     if then_body
       @mb.if_acmpeq els
-      compile(then_body)
+      compile(then_body, expr)
     else
-      @mb.aconst_null
+      @mb.aconst_null if expr
     end
     @mb.goto done
     els.set!
     if else_body
-      compile(else_body)
+      compile(else_body, expr)
     else
-      @mb.aconst_null
+      @mb.aconst_null if expr
     end
     done.set!
   end
@@ -155,8 +163,8 @@ class Compiler
     end
   end
 
-  def assign_local(name)
-    @mb.dup
+  def assign_local(name, expr)
+    @mb.dup if expr
     @mb.astore(@mb.local name)
   end
 
@@ -178,9 +186,10 @@ class Compiler
     @mb.aconst_null
   end
   
-  def for_range(start, finish, exclusive, variable, body)
+  def for_range(start, finish, exclusive, variable, body, expr)
     @mb.ldc_int(start)
     @mb.istore @mb.local(variable.name + "__loop")
+    
     start_lbl = @mb.label
     finish_lbl = @mb.label
     inc = start < finish ? 1 : -1
@@ -207,14 +216,21 @@ class Compiler
     @mb.invokestatic java.lang.Long, 'valueOf', [java.lang.Long, Java::long]
     @mb.astore @mb.local(variable.name)
     
-    compile(body)
-    @mb.pop
+    compile(body, false)
     
     @mb.iinc @mb.local(variable.name + "__loop"), inc
     @mb.goto start_lbl
     
     finish_lbl.set!
-    @mb.aconst_null
+    
+    if expr
+      # leave last iter value on stack
+      @mb.iload @mb.local(variable.name + "__loop")
+      @mb.i2l
+      @mb.invokestatic java.lang.Long, 'valueOf', [java.lang.Long, Java::long]
+      @mb.dup
+      @mb.astore @mb.local(variable.name)
+    end
   end
 
   def bootstrap
@@ -237,7 +253,7 @@ class Compiler
 
   def return(body)
     if body
-      compile(body)
+      compile(body, true)
     else
       @mb.aconst_null
     end
