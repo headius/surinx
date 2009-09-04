@@ -97,6 +97,13 @@ class Compiler
     @mb.aprintln
     @mb.aconst_null
   end
+  
+  def print
+    @mb.getstatic java.lang.System, "out", java.io.PrintStream
+    @mb.swap
+    @mb.invokevirtual java.io.PrintStream, "print", [Java::void, java.lang.Object]
+    @mb.aconst_null
+  end
 
   NAME_TRANSLATED = Hash.new {|hash, key| key}
   NAME_TRANSLATED["<"] = "__lt__"
@@ -168,6 +175,45 @@ class Compiler
     @mb.pop
     @mb.goto top
     bottom.set!
+    @mb.aconst_null
+  end
+  
+  def for_range(start, finish, exclusive, variable, body)
+    @mb.ldc_int(start)
+    @mb.istore @mb.local(variable.name + "__loop")
+    start_lbl = @mb.label
+    finish_lbl = @mb.label
+    inc = start < finish ? 1 : -1
+    
+    start_lbl.set!
+    @mb.iload @mb.local(variable.name + "__loop")
+    @mb.ldc_int(finish)
+    if inc == 1
+      if exclusive
+        @mb.if_icmpeq finish_lbl
+      else
+        @mb.if_icmpgt finish_lbl
+      end
+    else
+      if exclusive
+        @mb.if_icmpeq finish_lbl
+      else
+        @mb.if_icmplt finish_lbl
+      end
+    end
+    
+    @mb.iload @mb.local(variable.name + "__loop")
+    @mb.i2l
+    @mb.invokestatic java.lang.Long, 'valueOf', [java.lang.Long, Java::long]
+    @mb.astore @mb.local(variable.name)
+    
+    compile(body)
+    @mb.pop
+    
+    @mb.iinc @mb.local(variable.name + "__loop"), inc
+    @mb.goto start_lbl
+    
+    finish_lbl.set!
     @mb.aconst_null
   end
 

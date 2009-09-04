@@ -90,6 +90,9 @@ class org::jruby::ast::FCallNode
     if name == "puts"
       compiler.compile(args_node)
       compiler.puts
+    elsif name == "print"
+      compiler.compile(args_node)
+      compiler.print
     else
       compiler.this
       compiler.compile(args_node)
@@ -123,6 +126,17 @@ end
 class org::jruby::ast::FloatNode
   def compile(compiler)
     compiler.float value
+  end
+end
+
+class org::jruby::ast::ForNode
+  def compile(compiler)
+    if org::jruby::ast::DotNode === iter_node
+      # while loop
+      start = iter_node.begin_node.value
+      finish = iter_node.end_node.value
+      compiler.for_range(start, finish, iter_node.exclusive?, var_node, body_node)
+    end
   end
 end
 
@@ -177,8 +191,13 @@ end
 
 class org::jruby::ast::VCallNode
   def compile(compiler)
-    compiler.this
-    compiler.call name, 1
+    if name == "puts"
+      compiler.string("")
+      compiler.puts
+    else
+      compiler.this
+      compiler.call name, 1
+    end
   end
 end
 

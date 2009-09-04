@@ -1,0 +1,33 @@
+BAILOUT = 16
+MAX_ITERATIONS = 1000
+
+def start 
+  puts "Rendering..."
+  for y in -39..39
+    puts
+    for x in -39..39
+      i = iterate x/40.0, y/40.0
+      if i == 0 then print "*" else print " " end
+    end
+  end
+end
+ 
+def iterate(x,y)
+  cr = y-0.5
+  ci = x
+  zi = zr = 0.0
+  i = 0
+  while true
+    i += 1
+    temp = zr * zi
+    zr2 = zr * zr
+    zi2 = zi * zi
+    zr = zr2 - zi2 + cr
+    zi = temp + temp + ci
+    return i if zi2 + zr2 > BAILOUT
+    return 0 if i > MAX_ITERATIONS
+  end
+end
+
+start
+
