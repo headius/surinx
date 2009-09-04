@@ -64,6 +64,19 @@ class org::jruby::ast::CallNode
   end
 end
 
+class org::jruby::ast::ConstDeclNode
+  def compile(compiler)
+    compiler.set_constant name, value_node
+    compiler.compile value_node
+  end
+end
+
+class org::jruby::ast::ConstNode
+  def compile(compiler)
+    compiler.get_constant name
+  end
+end
+
 class org::jruby::ast::FCallNode
   def build(body)
     size = args ? args.child_nodes.size : 0
@@ -147,6 +160,12 @@ end
 class org::jruby::ast::RootNode
   def compile(compiler)
     compiler.root(self)
+  end
+end
+
+class org::jruby::ast::StrNode
+  def compile(compiler)
+    compiler.string(value)
   end
 end
 

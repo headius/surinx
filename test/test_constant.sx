@@ -1,0 +1,2 @@
+FOO = 1
+puts FOO == 1

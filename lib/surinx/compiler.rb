@@ -88,6 +88,10 @@ class Compiler
     @mb.ldc_double(value)
     @mb.invokestatic java.lang.Double, 'valueOf', [java.lang.Double, Java::double]
   end
+  
+  def string(value)
+    @mb.ldc(value)
+  end
 
   def puts
     @mb.aprintln
@@ -106,17 +110,33 @@ class Compiler
     name = NAME_TRANSLATED[name]
     @mb.invokedynamic java.lang.Object, name, [java.lang.Object, *([java.lang.Object] * size)]
   end
+  
+  def set_constant(name, body)
+    instance_variable_set "@#{name}", body
+  end
+  
+  def get_constant(name)
+    compile(instance_variable_get "@#{name}")
+  end
 
   def branch(condition, then_body, else_body)
     els = @mb.label
     done = @mb.label
     compile(condition)
     @mb.getstatic java.lang.Boolean, "FALSE", java.lang.Boolean
-    @mb.if_acmpeq els
-    compile(then_body)
+    if then_body
+      @mb.if_acmpeq els
+      compile(then_body)
+    else
+      @mb.aconst_null
+    end
     @mb.goto done
     els.set!
-    compile(else_body)
+    if else_body
+      compile(else_body)
+    else
+      @mb.aconst_null
+    end
     done.set!
   end
 
