@@ -1,0 +1,10 @@
+def foo
+  return 1
+end
+
+def bar
+  return 2
+end
+
+puts foo == 1
+puts bar == 2

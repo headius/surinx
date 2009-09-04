@@ -38,6 +38,7 @@ class Compiler
   end
 
   def defn(name, args, body)
+    args ||= []
     arg_count = args.length
 
     old_mb, @mb = @mb, @cb.public_static_method(name, java.lang.Object, *([java.lang.Object] * arg_count))
@@ -166,5 +167,14 @@ class Compiler
 
   def false
     @mb.getstatic java.lang.Boolean, "FALSE", java.lang.Boolean
+  end
+
+  def return(body)
+    if body
+      compile(body)
+    else
+      @mb.aconst_null
+    end
+    @mb.areturn
   end
 end

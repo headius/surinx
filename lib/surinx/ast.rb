@@ -87,7 +87,11 @@ end
 
 class org::jruby::ast::DefnNode
   def compile(compiler)
-    compiler.defn name, args_node.pre.child_nodes, body_node
+    if args_node.pre
+      compiler.defn name, args_node.pre.child_nodes, body_node
+    else
+      compiler.defn name, nil, body_node
+    end
   end
 end
 
@@ -134,6 +138,12 @@ class org::jruby::ast::NewlineNode
   end
 end
 
+class org::jruby::ast::ReturnNode
+  def compile(compiler)
+    compiler.return(value_node)
+  end
+end
+
 class org::jruby::ast::RootNode
   def compile(compiler)
     compiler.root(self)
@@ -143,6 +153,13 @@ end
 class org::jruby::ast::TrueNode
   def compile(compiler)
     compiler.true
+  end
+end
+
+class org::jruby::ast::VCallNode
+  def compile(compiler)
+    compiler.this
+    compiler.call name, 1
   end
 end
 

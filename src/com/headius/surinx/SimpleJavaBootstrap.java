@@ -114,7 +114,8 @@ public class SimpleJavaBootstrap {
                 rClass = site.callerClass();
                 try {
                     rMethod = rClass.getMethod(site.name(), argTypes);
-                    target = MethodHandles.lookup().findStatic(rClass, site.name(), site.type());
+                    target = MethodHandles.lookup().unreflect(rMethod);
+                    target = MethodHandles.dropArguments(target, 0, Object.class);
                     target = MethodHandles.convertArguments(target, site.type());
                 } catch (NoSuchMethodException nsme) {
                     // hacky...try with all Object
