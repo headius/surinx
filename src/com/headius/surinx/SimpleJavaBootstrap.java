@@ -270,6 +270,18 @@ public class SimpleJavaBootstrap {
         return a + b;
     }
 
+	public static final String plus(String a, Double b) {
+		return a + b;
+	}
+
+	public static final String plus(String a, Long b) {
+		return a + b;
+	}
+
+	public static final String plus(String a, String b) {
+		return a + b;
+	}
+
     public static final Long minus(Long a, Long b) {
         return a - b;
     }
