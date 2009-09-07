@@ -1,3 +1,5 @@
+import 'java.lang.System'
+
 def fib(a)
   if a < 2
     a
@@ -6,4 +8,11 @@ def fib(a)
   end
 end
 
-puts fib(35)
+puts 'hello'
+a = 0
+while a < 10
+  start = System.currentTimeMillis
+  fib(30)
+  puts (System.currentTimeMillis - start) / 1000.0
+  a += 1
+end
