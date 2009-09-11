@@ -8,7 +8,6 @@ def fib(a)
   end
 end
 
-puts 'hello'
 a = 0
 while a < 10
   start = System.currentTimeMillis

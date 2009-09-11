@@ -20,7 +20,7 @@ class Compiler
     cls = nil
     @fb.generate do |name, cb|
       if name.split('.class')[0] == want_name.split('.sx')[0]
-        cls = JRuby.runtime.jruby_class_loader.define_class(name.split('.class')[0], cb.generate.to_java_bytes)
+        cls = JRuby.runtime.jruby_class_loader.define_class(name.split('.class')[0].gsub('/', '.'), cb.generate.to_java_bytes)
         break
       end
     end
@@ -245,7 +245,7 @@ class Compiler
 
   def bootstrap
     @cb.static_init do
-      ldc this.name
+      ldc this.name.gsub(/\//, '.')
       invokestatic java.lang.Class, "forName", [java.lang.Class, string]
       invokestatic com.headius.surinx.SimpleJavaBootstrap, "registerBootstrap", [void, java.lang.Class]
       returnvoid
